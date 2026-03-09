@@ -1,0 +1,6 @@
+> Task :app:compileDebugKotlin FAILED
+e: C:\Users\lars\AndroidStudioProjects\Momentum-New\app\src\main\java\app\keepmomentum\momentum\MainActivity.kt: (42, 5): Unresolved reference: fooBar
+e: C:\Users\lars\AndroidStudioProjects\Momentum-New\app\src\main\java\app\keepmomentum\momentum\util\NotificationHelper.kt: (17, 3): None of the following functions can be called with the arguments supplied.
+
+FAILURE: Build failed with an exception.
+BUILD FAILED in 3s

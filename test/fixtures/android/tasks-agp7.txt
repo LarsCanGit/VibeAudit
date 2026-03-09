@@ -1,0 +1,9 @@
+> Task :tasks
+
+------------------------------------------------------------
+All tasks runnable from root project
+------------------------------------------------------------
+
+Build tasks
+-----------
+compileDebugKotlinSources - Compiles Kotlin sources for the debug variant.

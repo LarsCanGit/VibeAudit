@@ -1,0 +1,31 @@
+{
+  "name": "vibeaudit",
+  "version": "0.1.0",
+  "description": "CLI tool that QAs AI-generated code before it's committed",
+  "license": "MIT",
+  "bin": {
+    "vibeaudit": "./bin/vibeaudit.js"
+  },
+  "scripts": {
+    "lint": "eslint src bin",
+    "vibeaudit": "node bin/vibeaudit.js",
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/test/**/*.test.js"
+    ]
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jest": "^30.2.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

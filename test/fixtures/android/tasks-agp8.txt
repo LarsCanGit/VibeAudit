@@ -1,0 +1,10 @@
+> Task :app:tasks
+
+------------------------------------------------------------
+Tasks runnable from project ':app'
+------------------------------------------------------------
+
+Build tasks
+-----------
+app:compileDebugKotlin - Compiles the debug Kotlin source files.
+app:compileDebugSources - Compiles all sources in the debug variant.

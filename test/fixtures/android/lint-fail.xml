@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.7.3">
+    <issue
+        id="MissingPermission"
+        severity="Error"
+        message="Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with `checkPermission`) or explicitly handle a potential `SecurityException`"
+        category="Correctness"
+        priority="9"
+        summary="Missing Permissions">
+        <location
+            file="C:\Users\lars\AndroidStudioProjects\Momentum-New\app\src\main\java\app\keepmomentum\momentum\util\NotificationHelper.kt"
+            line="112"
+            column="13"/>
+    </issue>
+    <issue
+        id="OldTargetApi"
+        severity="Warning"
+        message="Not targeting the latest versions of Android"
+        category="Correctness"
+        priority="6"
+        summary="Target SDK attribute is not targeting latest version">
+        <location
+            file="C:\Users\lars\AndroidStudioProjects\Momentum-New\app\build.gradle.kts"
+            line="19"
+            column="9"/>
+    </issue>
+</issues>

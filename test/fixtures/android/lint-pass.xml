@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.7.3">
+    <issue
+        id="OldTargetApi"
+        severity="Warning"
+        message="Not targeting the latest versions of Android"
+        category="Correctness"
+        priority="6"
+        summary="Target SDK attribute is not targeting latest version">
+        <location
+            file="C:\Users\lars\AndroidStudioProjects\Momentum-New\app\build.gradle.kts"
+            line="19"
+            column="9"/>
+    </issue>
+</issues>

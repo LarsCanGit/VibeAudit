@@ -1,0 +1,9 @@
+> Task :tasks
+
+------------------------------------------------------------
+All tasks runnable from root project
+------------------------------------------------------------
+
+Build tasks
+-----------
+compileDebugJavaSources - Compiles Java sources for the debug variant.
