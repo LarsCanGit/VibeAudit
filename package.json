@@ -1,8 +1,17 @@
 {
   "name": "vibeaudit",
   "version": "0.1.0",
-  "description": "CLI tool that QAs AI-generated code before it's committed",
+  "description": "Pre-push QA for AI-generated code. Commit, vibeaudit, push.",
   "license": "MIT",
+  "keywords": ["vibe-coding", "ai", "lint", "qa", "cli", "android", "kotlin", "eslint"],
+  "homepage": "https://getvibeaudit.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LarsCanGit/vibeaudit"
+  },
+  "bugs": {
+    "url": "https://github.com/LarsCanGit/vibeaudit/issues"
+  },
   "bin": {
     "vibeaudit": "./bin/vibeaudit.js"
   },
@@ -13,9 +22,7 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testMatch": [
-      "**/test/**/*.test.js"
-    ]
+    "testMatch": ["**/test/**/*.test.js"]
   },
   "dependencies": {
     "chalk": "^4.1.2",
@@ -26,6 +33,6 @@
     "jest": "^30.2.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.0.0"
   }
 }

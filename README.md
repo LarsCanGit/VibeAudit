@@ -1,6 +1,8 @@
 # VibeAudit
 
-A CLI tool that QAs AI-generated code before it's committed — runs stack-aware checks and returns structured output readable by both humans and AI agents.
+**Commit, vibeaudit, push.**
+
+Pre-push QA for AI-generated code. One command that runs the right checks for your stack, returns structured output readable by both humans and AI agents, and exits non-zero if anything blocking fails.
 
 ## Install
 
@@ -11,30 +13,40 @@ npm install -g vibeaudit
 ## Usage
 
 ```bash
-# Check current directory
+# Run in current directory (auto-detects project type)
 vibeaudit
 
-# Check a specific directory
-vibeaudit --path <dir>
-
-# Output JSON only (no terminal formatting)
-vibeaudit --json
+# Run against a specific path
+vibeaudit --path ./my-project
 
 # Run specific checks only
-vibeaudit --checks eslint,tests
+vibeaudit --checks compile,lint
+
+# Agent-readable JSON output only
+vibeaudit --json
 ```
 
-## What it checks (node stack)
+## What it checks
 
-| Check | Blocking | Description |
-|-------|----------|-------------|
-| `eslint` | yes | Lint errors using project or inherited ESLint config |
-| `npm-audit` | no (warn) | High/critical vulnerabilities in dependencies |
-| `tests` | yes | Runs `npm test` if a test script is defined; skips otherwise |
+| Stack | Checks |
+|-------|--------|
+| Node / JS / TS | ESLint, npm audit, test runner |
+| Android / Kotlin | Compile (AGP version-agnostic), lint, ktlint, tests |
+
+Auto-detects project type from `package.json`, `build.gradle`, or `build.gradle.kts`. No config needed for the happy path.
 
 ## Exit codes
 
 | Code | Meaning |
 |------|---------|
-| `0` | All blocking checks passed |
-| `1` | One or more blocking checks failed |
+| 0 | All blocking checks pass |
+| 1 | One or more blocking checks failed |
+| 2 | VibeAudit configuration error |
+
+## Why VibeAudit
+
+Vibe coding tools generate code fast but don't validate it. VibeAudit inserts a gate between "looks good" and "commit". One command, structured output, agent-readable JSON so Claude Code / Cursor can self-correct without hand-holding.
+
+---
+
+*VibeAudit v0.1 was QA'd by VibeAudit itself before publishing.*

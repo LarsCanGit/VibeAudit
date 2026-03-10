@@ -1,0 +1,27 @@
+# Dev and test
+test/
+tests/
+fixtures/
+*.test.js
+*.spec.js
+jest.config.*
+.eslintrc*
+.eslintignore
+
+# Docs and project management
+*.md
+!README.md
+docs/
+
+# Dev tooling
+.vscode/
+.idea/
+.npmignore
+CLAUDE.md
+.claude/
+
+# Misc
+.DS_Store
+*.log
+coverage/
+.nyc_output/
