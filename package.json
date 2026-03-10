@@ -1,6 +1,6 @@
 {
   "name": "@lmhansen/vibeaudit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pre-push QA for AI-generated code. Commit, vibeaudit, push.",
   "license": "MIT",
   "keywords": ["vibe-coding", "ai", "lint", "qa", "cli", "android", "kotlin", "eslint"],
