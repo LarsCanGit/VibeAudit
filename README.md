@@ -43,6 +43,28 @@ Auto-detects project type from `package.json`, `build.gradle`, or `build.gradle.
 | 1 | One or more blocking checks failed |
 | 2 | VibeAudit configuration error |
 
+## GitHub Action
+
+Add to `.github/workflows/vibeaudit.yml`:
+
+```yaml
+name: VibeAudit
+on:
+  push:
+    branches:
+      - '**'
+jobs:
+  vibeaudit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: LarsCanGit/VibeAudit@main
+```
+
+Fails the workflow if any blocking check fails. Exit code 1 = blocking failure.
+
+> **Note:** Android/Kotlin projects require the Android SDK and Gradle in CI. This is not provided by the default `ubuntu-latest` runner. The Action is primarily useful for Node/JS projects in v0.1. Android CI support is on the roadmap.
+
 ## Why VibeAudit
 
 Vibe coding tools generate code fast but don't validate it. VibeAudit inserts a gate between "looks good" and "commit". One command, structured output, agent-readable JSON so Claude Code / Cursor can self-correct without hand-holding.

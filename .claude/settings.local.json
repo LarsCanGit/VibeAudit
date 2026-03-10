@@ -15,7 +15,8 @@
       "Bash(vibeaudit --json)",
       "Bash(npm pack)",
       "Bash(npm uninstall -g vibeaudit)",
-      "Bash(rm vibeaudit-0.1.0.tgz)"
+      "Bash(rm vibeaudit-0.1.0.tgz)",
+      "Bash(npm audit:*)"
     ]
   }
 }

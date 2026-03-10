@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+# Commit action dependencies (required for GitHub Actions)
+!action/node_modules/
+!action/node_modules/**
+
 # Build output
 dist/
 build/
