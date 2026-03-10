@@ -1,4 +1,4 @@
-name: 'VibeAudit'
+name: 'VibeAudit QA'
 description: 'Pre-push QA for AI-generated code. Commit, vibeaudit, push.'
 author: 'LarsCanGit'
 
