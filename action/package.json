@@ -1,0 +1,8 @@
+{
+  "name": "vibeaudit-action",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@actions/core": "^3.0.0"
+  }
+}

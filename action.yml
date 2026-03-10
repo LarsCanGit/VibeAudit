@@ -1,0 +1,21 @@
+name: 'VibeAudit'
+description: 'Pre-push QA for AI-generated code. Commit, vibeaudit, push.'
+author: 'LarsCanGit'
+
+inputs:
+  path:
+    description: 'Path to the project to audit (defaults to repo root)'
+    required: false
+    default: '.'
+  checks:
+    description: 'Comma-separated list of checks to run (defaults to all)'
+    required: false
+    default: ''
+
+outputs:
+  result:
+    description: 'Audit result: pass or fail'
+
+runs:
+  using: 'node20'
+  main: 'action/index.js'
