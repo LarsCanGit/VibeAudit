@@ -24,6 +24,9 @@ try {
 
   const result = JSON.parse(r.stdout.slice(jsonStart));
 
+  //log the full report regardless of pass/fail
+  console.log(r.stdout.slice(0, jsonStart).trim() || JSON.stringify(result, null, 2));
+
   if (result.blocking) {
     console.error('::error::vibeaudit found blocking issues');
     process.exit(1);
