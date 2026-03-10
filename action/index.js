@@ -1,19 +1,28 @@
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 try {
   const path = process.env.INPUT_PATH || '.';
-  const checks = process.env.INPUT_CHECKS ? `--checks ${process.env.INPUT_CHECKS}` : '';
-  
-  const cmd = `vibeaudit --path ${path} ${checks} --json`.trim();
-  
-  const output = execSync(cmd, { 
-    encoding: 'utf8', 
-    stdio: ['pipe', 'pipe', 'inherit'],
+  const args = ['--path', path, '--json'];
+  if (process.env.INPUT_CHECKS) args.push('--checks', process.env.INPUT_CHECKS);
+
+  const r = spawnSync('vibeaudit', args, {
+    encoding: 'utf8',
     env: { ...process.env, PATH: `${process.env.PATH}:/usr/local/bin:/usr/bin` }
   });
 
-  const jsonStart = output.indexOf('{');
-  const result = JSON.parse(output.slice(jsonStart));
+  if (r.error) {
+    console.error(`::error::vibeaudit failed to start: ${r.error.message}`);
+    process.exit(1);
+  }
+
+  const jsonStart = r.stdout.indexOf('{');
+  if (jsonStart === -1) {
+    console.error('::error::vibeaudit produced no JSON output');
+    if (r.stderr) console.error(r.stderr);
+    process.exit(1);
+  }
+
+  const result = JSON.parse(r.stdout.slice(jsonStart));
 
   if (result.blocking) {
     console.error('::error::vibeaudit found blocking issues');
