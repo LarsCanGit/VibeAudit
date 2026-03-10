@@ -7,7 +7,7 @@ Pre-push QA for AI-generated code. One command that runs the right checks for yo
 ## Install
 
 ```bash
-npm install -g vibeaudit
+npm install -g @lmhansen/vibeaudit
 ```
 
 ## Usage

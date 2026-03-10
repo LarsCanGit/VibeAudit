@@ -1,5 +1,5 @@
 {
-  "name": "vibeaudit",
+  "name": "@lmhansen/vibeaudit",
   "version": "0.1.0",
   "description": "Pre-push QA for AI-generated code. Commit, vibeaudit, push.",
   "license": "MIT",

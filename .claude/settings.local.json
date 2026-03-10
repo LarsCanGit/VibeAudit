@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npm test)",
+      "Bash(npm run:*)",
+      "Write(*)",
+      "Edit(*)",
+      "Create(*)",
+      "Bash(npm unlink vibecheck)",
+      "Bash(npm link)",
+      "Bash(\"c:\\\\Users\\\\lars\\\\Documents\\\\VSCode\\\\Claude Projects\\\\VibeCheck\\\\README.md\":*)",
+      "Bash(npm pack --dry-run)",
+      "Bash(vibeaudit --json)",
+      "Bash(npm pack)",
+      "Bash(npm uninstall -g vibeaudit)",
+      "Bash(rm vibeaudit-0.1.0.tgz)"
+    ]
+  }
+}
