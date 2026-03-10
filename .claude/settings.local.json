@@ -10,7 +10,6 @@
       "Create(*)",
       "Bash(npm unlink vibecheck)",
       "Bash(npm link)",
-      "Bash(\"c:\\\\Users\\\\lars\\\\Documents\\\\VSCode\\\\Claude Projects\\\\VibeCheck\\\\README.md\":*)",
       "Bash(npm pack --dry-run)",
       "Bash(vibeaudit --json)",
       "Bash(npm pack)",
