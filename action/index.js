@@ -6,7 +6,7 @@ try {
   const args = process.env.INPUT_PATH ? `--path ${process.env.INPUT_PATH}` : '';
   const checks = process.env.INPUT_CHECKS ? `--checks ${process.env.INPUT_CHECKS}` : '';
   
-  const cmd = `npx @lmhansen/vibeaudit ${args} ${checks} --json`.trim();
+  const cmd = `vibeaudit ${args} ${checks} --json`.trim();
   const output = execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'inherit'] });
 
   const jsonStart = output.indexOf('{');
