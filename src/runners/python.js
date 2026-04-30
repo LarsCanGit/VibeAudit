@@ -134,13 +134,26 @@ function runTests(targetPath, py) {
     };
   }
 
-  const errText = output.trim().split('\n').find(l => l.trim().length > 0) || 'Tests failed';
+  // "FAILED tests/foo.py::test_bar - AssertionError: x != y"
+  const failedLines = output.split('\n').filter(l => l.startsWith('FAILED '));
+  const issues = failedLines.map(l => {
+    const body = l.slice('FAILED '.length); // "tests/foo.py::test_bar - AssertionError"
+    const colonColon = body.indexOf('::');
+    const file = colonColon !== -1 ? body.slice(0, colonColon).replace(/\\/g, '/') : '';
+    const message = colonColon !== -1 ? body.slice(colonColon + 2) : body;
+    return { file, line: 0, rule: 'test-failure', message: message.trim() };
+  });
+
+  if (issues.length === 0) {
+    issues.push({ file: '', line: 0, rule: 'test-failure', message: 'Tests failed' });
+  }
+
   return {
     name: 'tests',
     status: 'fail',
     blocking: true,
     duration_ms: Date.now() - start,
-    issues: [{ file: '', line: 0, rule: 'test-failure', message: errText.trim() }]
+    issues
   };
 }
 
