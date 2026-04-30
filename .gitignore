@@ -27,6 +27,7 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+.openrouter.env
 
 # OS
 .DS_Store
