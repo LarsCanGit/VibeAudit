@@ -79,8 +79,7 @@ function hasTestSuite(targetPath) {
   return (
     fs.existsSync(path.join(targetPath, 'tests')) ||
     fs.existsSync(path.join(targetPath, 'test')) ||
-    fs.existsSync(path.join(targetPath, 'pytest.ini')) ||
-    fs.existsSync(path.join(targetPath, 'pyproject.toml'))
+    fs.existsSync(path.join(targetPath, 'pytest.ini'))
   );
 }
 
