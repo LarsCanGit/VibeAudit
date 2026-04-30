@@ -21,16 +21,16 @@ const targetPath = path.resolve(opts.path || process.cwd());
 const checksFilter = opts.checks ? opts.checks.split(',').map(s => s.trim()) : null;
 
 async function main() {
-  const stacks = detect(targetPath);
-  const runners = getRunners(stacks);
+  const detected = detect(targetPath);
+  const pairs = getRunners(detected);
 
   const allResults = [];
-  for (const runner of runners) {
-    const results = await runner.run(targetPath, checksFilter);
+  for (const pair of pairs) {
+    const results = await pair.runner.run(pair.path, checksFilter);
     allResults.push(...results);
   }
 
-  const stack = stacks.filter(s => s !== 'unknown').join('+') || 'unknown';
+  const stack = [...new Set(detected.map(d => d.stack))].filter(s => s !== 'unknown').join('+') || 'unknown';
   const output = format(allResults, { json: opts.json, stack });
 
   process.stdout.write(output + '\n');
