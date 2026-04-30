@@ -5,13 +5,9 @@ const path = require('path');
 const fs = require('fs');
 
 function findPython() {
-  for (const cmd of ['python3', 'python']) {
+  for (const cmd of ['python', 'python3']) {
     const r = spawnSync(cmd, ['--version'], { encoding: 'utf8', timeout: 5000 });
-    if (!r.error) {
-      // Reject Python 2 — importlib.util and other dependencies require Python 3
-      const out = (r.stdout + r.stderr).trim();
-      if (/^Python 3\./.test(out)) return cmd;
-    }
+    if (!r.error) return cmd;
   }
   return null;
 }
