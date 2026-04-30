@@ -5,9 +5,13 @@ const path = require('path');
 const fs = require('fs');
 
 function findPython() {
-  for (const cmd of ['python', 'python3']) {
+  for (const cmd of ['python3', 'python']) {
     const r = spawnSync(cmd, ['--version'], { encoding: 'utf8', timeout: 5000 });
-    if (!r.error) return cmd;
+    if (!r.error) {
+      // Reject Python 2 — importlib.util and other dependencies require Python 3
+      const out = (r.stdout + r.stderr).trim();
+      if (/^Python 3\./.test(out)) return cmd;
+    }
   }
   return null;
 }
@@ -16,7 +20,7 @@ function findPython() {
 const SYNTAX_SCRIPT = [
   'import ast, os, json',
   'errors = []',
-  'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv"])',
+  'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv", "env"])',
   'for root, dirs, files in os.walk("."):',
   '    dirs[:] = [d for d in dirs if d not in skip]',
   '    for f in files:',
@@ -78,7 +82,7 @@ function runSyntax(targetPath, py) {
 // Collects top-level import names via AST, checks each with importlib.util.find_spec
 const IMPORT_SCRIPT = [
   'import ast, os, json, sys, importlib.util',
-  'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv"])',
+  'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv", "env"])',
   // Collect all local module names: any .py filename or package dir anywhere in the tree
   'local_modules = set()',
   'for root, dirs, files in os.walk("."):',
@@ -224,7 +228,17 @@ const IMPORT_TO_PACKAGE = {
 // Collects top-level import names via AST, returns JSON array
 const COLLECT_IMPORTS_SCRIPT = [
   'import ast, os, json, sys',
-  'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv"])',
+  'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv", "env"])',
+  // Collect local module names to avoid false-positive requirements warnings
+  'local_modules = set()',
+  'for root, dirs, files in os.walk("."):',
+  '    dirs[:] = [d for d in dirs if d not in skip]',
+  '    for f in files:',
+  '        if f.endswith(".py") and f != "__init__.py":',
+  '            local_modules.add(f[:-3])',
+  '    for d in list(dirs):',
+  '        if os.path.exists(os.path.join(root, d, "__init__.py")):',
+  '            local_modules.add(d)',
   'names = set()',
   'for root, dirs, files in os.walk("."):',
   '    dirs[:] = [d for d in dirs if d not in skip]',
@@ -241,7 +255,7 @@ const COLLECT_IMPORTS_SCRIPT = [
   '                if node.level == 0 and node.module:',
   '                    names.add(node.module.split(".")[0])',
   'stdlib = getattr(sys, "stdlib_module_names", set())',
-  'third_party = [n for n in sorted(names) if not n.startswith("_") and n != "__future__" and n not in stdlib]',
+  'third_party = [n for n in sorted(names) if not n.startswith("_") and n != "__future__" and n not in stdlib and n not in local_modules]',
   'print(json.dumps(third_party))',
 ].join('\n');
 
@@ -372,6 +386,21 @@ function runTests(targetPath, py) {
     encoding: 'utf8',
     timeout: 60000
   });
+
+  if (result.error) {
+    const isTimeout = result.error.code === 'ETIMEDOUT';
+    return {
+      name: 'tests',
+      status: 'fail',
+      blocking: true,
+      duration_ms: Date.now() - start,
+      issues: [{
+        file: '', line: 0,
+        rule: isTimeout ? 'test-timeout' : 'test-run-error',
+        message: isTimeout ? 'Tests timed out after 60s' : result.error.message
+      }]
+    };
+  }
 
   const output = (result.stdout || '') + (result.stderr || '');
 

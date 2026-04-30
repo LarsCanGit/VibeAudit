@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SKIP_DIRS = new Set(['.git', 'node_modules', '.gradle', '__pycache__', '.venv', 'venv']);
+const SKIP_DIRS = new Set(['.git', 'node_modules', '.gradle', '__pycache__', '.venv', 'venv', 'env']);
 
 function detectAt(dirPath) {
   const results = [];
@@ -17,13 +17,16 @@ function detectAt(dirPath) {
     results.push({ stack: 'node', path: dirPath });
   }
 
-  const entries = fs.existsSync(dirPath) ? fs.readdirSync(dirPath) : [];
-  if (
+  const hasPythonSentinel =
     fs.existsSync(path.join(dirPath, 'pyproject.toml')) ||
     fs.existsSync(path.join(dirPath, 'setup.py')) ||
-    fs.existsSync(path.join(dirPath, 'requirements.txt')) ||
-    entries.some(f => f.endsWith('.py'))
-  ) {
+    fs.existsSync(path.join(dirPath, 'requirements.txt'));
+
+  const entries = fs.existsSync(dirPath) ? fs.readdirSync(dirPath) : [];
+  // Detect Python via .py files only when no other stack is present — avoids spurious
+  // Python runner activation on Node/Android projects with stray scripts
+  const hasPyFiles = entries.some(f => f.endsWith('.py'));
+  if (hasPythonSentinel || (hasPyFiles && results.length === 0)) {
     results.push({ stack: 'python', path: dirPath });
   }
 
