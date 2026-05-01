@@ -4,9 +4,12 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+
+// findPython() works as intended -- Tests for 'python' and then 'python3' in PATH.
+// returns null if neither found, and the cmd if found. 
 function findPython() {
   for (const cmd of ['python', 'python3']) {
-    const r = spawnSync(cmd, ['--version'], { encoding: 'utf8', timeout: 5000 });
+    const r = spawnSync(cmd, ['--version'], { encoding: 'utf8', timeout: 2500 });
     if (!r.error) return cmd;
   }
   return null;
@@ -250,8 +253,8 @@ const COLLECT_IMPORTS_SCRIPT = [
   '            elif isinstance(node, ast.ImportFrom):',
   '                if node.level == 0 and node.module:',
   '                    names.add(node.module.split(".")[0])',
-  'stdlib = getattr(sys, "stdlib_module_names", set())',
-  'third_party = [n for n in sorted(names) if not n.startswith("_") and n != "__future__" and n not in stdlib and n not in local_modules]',
+  'stdlib = getattr(sys, "stdlib_module_names", None)',
+  'third_party = [n for n in sorted(names) if not n.startswith("_") and n != "__future__" and (not stdlib or n not in stdlib) and n not in local_modules]',
   'print(json.dumps(third_party))',
 ].join('\n');
 
