@@ -131,7 +131,7 @@ function runImports(targetPath, py) {
   const start = Date.now();
 
   // Prefer pyflakes if available
-  const pyflakesCheck = spawnSync(py, ['-m', 'pyflakes', '--version'], {
+  const pyflakesCheck = spawnSync(py, ['-c', 'import pyflakes'], {
     cwd: targetPath,
     encoding: 'utf8',
     timeout: 5000
