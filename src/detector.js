@@ -25,7 +25,10 @@ function detectAt(dirPath) {
   const entries = fs.existsSync(dirPath) ? fs.readdirSync(dirPath) : [];
   // Detect Python via .py files only when no other stack is present — avoids spurious
   // Python runner activation on Node/Android projects with stray scripts
-  const hasPyFiles = entries.some(f => f.endsWith('.py'));
+  const hasPyFiles = entries.some(f => {
+    if (!f.endsWith('.py')) return false;
+    try { return fs.statSync(path.join(dirPath, f)).isFile(); } catch (_) { return false; }
+  });
   if (hasPythonSentinel || (hasPyFiles && results.length === 0)) {
     results.push({ stack: 'python', path: dirPath });
   }

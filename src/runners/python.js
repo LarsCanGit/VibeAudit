@@ -78,18 +78,18 @@ function runSyntax(targetPath, py) {
   };
 }
 
-// Collects top-level import names via AST, checks each with importlib.util.find_spec
-const IMPORT_SCRIPT = [
+// Single AST walk: collects local_modules + names once, returns both missing imports
+// (via find_spec) and the full third-party list (for requirements check).
+const COMBINED_AST_SCRIPT = [
   'import ast, os, json, sys, importlib.util',
   'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv", "env"])',
-  // Collect all local module names: any .py filename or package dir anywhere in the tree
   'local_modules = set()',
   'for root, dirs, files in os.walk("."):',
   '    dirs[:] = [d for d in dirs if d not in skip]',
   '    for f in files:',
   '        if f.endswith(".py") and f != "__init__.py":',
   '            local_modules.add(f[:-3])',
-  '    for d in dirs:',
+  '    for d in list(dirs):',
   '        if os.path.exists(os.path.join(root, d, "__init__.py")):',
   '            local_modules.add(d)',
   'names = set()',
@@ -107,8 +107,8 @@ const IMPORT_SCRIPT = [
   '            elif isinstance(node, ast.ImportFrom):',
   '                if node.level == 0 and node.module:',
   '                    names.add(node.module.split(".")[0])',
-  'missing = []',
   'stdlib = getattr(sys, "stdlib_module_names", None)',
+  'third_party = [n for n in sorted(names) if not n.startswith("_") and n != "__future__" and (not stdlib or n not in stdlib) and n not in local_modules]',
   'declared = set()',
   'if os.path.exists("requirements.txt"):',
   '    for line in open("requirements.txt"):',
@@ -116,27 +116,44 @@ const IMPORT_SCRIPT = [
   '        if not line or line.startswith("#"): continue',
   '        name = line.split("[")[0].split("==")[0].split(">=")[0].split("<=")[0].split("~=")[0].split("!=")[0].strip()',
   '        declared.add(name.lower().replace("-", "_"))',
-  'for name in sorted(names):',
-  '    if name.startswith("_"): continue',
-  '    if name == "__future__": continue',
-  '    if stdlib and name in stdlib: continue',
-  '    if name in local_modules: continue',
+  'missing = []',
+  'for name in third_party:',
   '    if name.lower().replace("-", "_") in declared: continue',
   '    spec = importlib.util.find_spec(name)',
   '    if spec is None: missing.append(name)',
-  'print(json.dumps(missing))',
+  'print(json.dumps({"missing": missing, "third_party": third_party}))',
 ].join('\n');
 
-function runImports(targetPath, py) {
-  const start = Date.now();
-
-  // Prefer pyflakes if available
-  const pyflakesCheck = spawnSync(py, ['-c', 'import pyflakes'], {
+function checkPyflakesAvailable(targetPath, py) {
+  const r = spawnSync(py, ['-c', 'import pyflakes'], {
     cwd: targetPath,
     encoding: 'utf8',
     timeout: 5000
   });
-  const hasPyflakes = !pyflakesCheck.error && pyflakesCheck.status === 0;
+  return !r.error && r.status === 0;
+}
+
+function runAstWalk(targetPath, py) {
+  const result = spawnSync(py, ['-c', COMBINED_AST_SCRIPT], {
+    cwd: targetPath,
+    encoding: 'utf8',
+    timeout: 30000
+  });
+
+  if (result.error) {
+    return { error: result.error.message };
+  }
+
+  try {
+    return JSON.parse(result.stdout.trim());
+  } catch (_) {
+    const errLine = (result.stderr || '').trim().split('\n')[0];
+    return { error: errLine || 'AST walk failed' };
+  }
+}
+
+function runImports(targetPath, py, hasPyflakes, astData) {
+  const start = Date.now();
 
   if (hasPyflakes) {
     const result = spawnSync(py, ['-m', 'pyflakes', '.'], {
@@ -173,35 +190,20 @@ function runImports(targetPath, py) {
     };
   }
 
-  // Fallback: AST-based importlib.util.find_spec check
-  const result = spawnSync(py, ['-c', IMPORT_SCRIPT], {
-    cwd: targetPath,
-    encoding: 'utf8',
-    timeout: 30000
-  });
-
-  if (result.error) {
+  // Fallback: use pre-computed AST walk result
+  if (astData.error) {
     return {
       name: 'imports',
       status: 'fail',
       blocking: true,
       duration_ms: Date.now() - start,
-      issues: [{ file: '', line: 0, rule: 'import-check-error', message: result.error.message }]
+      issues: [{ file: '', line: 0, rule: 'import-check-error', message: astData.error }]
     };
   }
 
-  const issues = [];
-  try {
-    const missing = JSON.parse(result.stdout.trim());
-    for (const name of missing) {
-      issues.push({ file: '', line: 0, rule: 'import-unresolved', message: `Cannot resolve import '${name}'` });
-    }
-  } catch (_) {
-    const errLine = (result.stderr || '').trim().split('\n')[0];
-    if (errLine) {
-      issues.push({ file: '', line: 0, rule: 'import-check-error', message: errLine });
-    }
-  }
+  const issues = (astData.missing || []).map(name => ({
+    file: '', line: 0, rule: 'import-unresolved', message: `Cannot resolve import '${name}'`
+  }));
 
   return {
     name: 'imports',
@@ -224,40 +226,6 @@ const IMPORT_TO_PACKAGE = {
   Crypto: 'pycryptodome',
 };
 
-// Collects top-level import names via AST, returns JSON array
-const COLLECT_IMPORTS_SCRIPT = [
-  'import ast, os, json, sys',
-  'skip = frozenset(["__pycache__", ".git", "node_modules", ".venv", "venv", "env"])',
-  // Collect local module names to avoid false-positive requirements warnings
-  'local_modules = set()',
-  'for root, dirs, files in os.walk("."):',
-  '    dirs[:] = [d for d in dirs if d not in skip]',
-  '    for f in files:',
-  '        if f.endswith(".py") and f != "__init__.py":',
-  '            local_modules.add(f[:-3])',
-  '    for d in list(dirs):',
-  '        if os.path.exists(os.path.join(root, d, "__init__.py")):',
-  '            local_modules.add(d)',
-  'names = set()',
-  'for root, dirs, files in os.walk("."):',
-  '    dirs[:] = [d for d in dirs if d not in skip]',
-  '    for f in files:',
-  '        if not f.endswith(".py"): continue',
-  '        try:',
-  '            tree = ast.parse(open(os.path.join(root, f), "rb").read())',
-  '        except SyntaxError:',
-  '            continue',
-  '        for node in ast.walk(tree):',
-  '            if isinstance(node, ast.Import):',
-  '                for alias in node.names: names.add(alias.name.split(".")[0])',
-  '            elif isinstance(node, ast.ImportFrom):',
-  '                if node.level == 0 and node.module:',
-  '                    names.add(node.module.split(".")[0])',
-  'stdlib = getattr(sys, "stdlib_module_names", None)',
-  'third_party = [n for n in sorted(names) if not n.startswith("_") and n != "__future__" and (not stdlib or n not in stdlib) and n not in local_modules]',
-  'print(json.dumps(third_party))',
-].join('\n');
-
 function parseRequirements(reqPath) {
   const lines = fs.readFileSync(reqPath, 'utf8').split('\n');
   const packages = new Set();
@@ -275,7 +243,7 @@ function parseRequirements(reqPath) {
   return packages;
 }
 
-function runRequirements(targetPath, py) {
+function runRequirements(targetPath, py, astData) {
   const start = Date.now();
   const reqPath = path.join(targetPath, 'requirements.txt');
 
@@ -302,38 +270,18 @@ function runRequirements(targetPath, py) {
     };
   }
 
-  const result = spawnSync(py, ['-c', COLLECT_IMPORTS_SCRIPT], {
-    cwd: targetPath,
-    encoding: 'utf8',
-    timeout: 30000
-  });
-
-  if (result.error) {
+  if (astData.error) {
     return {
       name: 'requirements',
       status: 'fail',
       blocking: false,
       duration_ms: Date.now() - start,
-      issues: [{ file: '', line: 0, rule: 'requirements-check-error', message: result.error.message }]
-    };
-  }
-
-  let importedNames = [];
-  try {
-    importedNames = JSON.parse(result.stdout.trim());
-  } catch (_) {
-    return {
-      name: 'requirements',
-      status: 'pass',
-      blocking: false,
-      duration_ms: Date.now() - start,
-      issues: []
+      issues: [{ file: '', line: 0, rule: 'requirements-check-error', message: astData.error }]
     };
   }
 
   const issues = [];
-  for (const name of importedNames) {
-    // Resolve import name to package name
+  for (const name of (astData.third_party || [])) {
     const packageName = (IMPORT_TO_PACKAGE[name] || name).toLowerCase().replace(/-/g, '_');
     if (!reqPackages.has(packageName)) {
       issues.push({
@@ -358,10 +306,23 @@ function hasTestSuite(targetPath) {
   if (fs.existsSync(path.join(targetPath, 'tests'))) return true;
   if (fs.existsSync(path.join(targetPath, 'test'))) return true;
   if (fs.existsSync(path.join(targetPath, 'pytest.ini'))) return true;
+  if (fs.existsSync(path.join(targetPath, 'conftest.py'))) return true;
   const pyproject = path.join(targetPath, 'pyproject.toml');
   if (fs.existsSync(pyproject)) {
     try {
-      return fs.readFileSync(pyproject, 'utf8').includes('[tool.pytest.ini_options]');
+      if (fs.readFileSync(pyproject, 'utf8').includes('[tool.pytest.ini_options]')) return true;
+    } catch (_) {}
+  }
+  const setupCfg = path.join(targetPath, 'setup.cfg');
+  if (fs.existsSync(setupCfg)) {
+    try {
+      if (fs.readFileSync(setupCfg, 'utf8').includes('[tool:pytest]')) return true;
+    } catch (_) {}
+  }
+  const toxIni = path.join(targetPath, 'tox.ini');
+  if (fs.existsSync(toxIni)) {
+    try {
+      if (fs.readFileSync(toxIni, 'utf8').includes('[pytest]')) return true;
     } catch (_) {}
   }
   return false;
@@ -456,7 +417,7 @@ function runTests(targetPath, py) {
   };
 }
 
-async function run(targetPath, checks) {
+function run(targetPath, checks) {
   const py = findPython();
 
   if (!py) {
@@ -470,10 +431,20 @@ async function run(targetPath, checks) {
     }];
   }
 
+  const needsImports = !checks || checks.includes('imports');
+  const needsRequirements = !checks || checks.includes('requirements');
+
+  const hasPyflakes = (needsImports || needsRequirements) ? checkPyflakesAvailable(targetPath, py) : false;
+
+  // Run the AST walk once when pyflakes is absent (imports fallback) or requirements is needed.
+  // Both checks consume from this single result instead of each spawning their own subprocess.
+  const needsAst = (!hasPyflakes && needsImports) || needsRequirements;
+  const astData = needsAst ? runAstWalk(targetPath, py) : null;
+
   const checkDefs = [
     { name: 'syntax',       fn: () => runSyntax(targetPath, py) },
-    { name: 'imports',      fn: () => runImports(targetPath, py) },
-    { name: 'requirements', fn: () => runRequirements(targetPath, py) },
+    { name: 'imports',      fn: () => runImports(targetPath, py, hasPyflakes, astData) },
+    { name: 'requirements', fn: () => runRequirements(targetPath, py, astData) },
     { name: 'tests',        fn: () => runTests(targetPath, py) }
   ];
 
