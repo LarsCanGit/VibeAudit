@@ -64,7 +64,7 @@ function buildJsonPayload(results, stack) {
 }
 
 function format(results, options) {
-  const { json = false, stack = 'unknown' } = options || {};
+  const { json = false, human = false, stack = 'unknown' } = options || {};
   const payload = buildJsonPayload(results, stack);
 
   if (json) {
@@ -72,7 +72,11 @@ function format(results, options) {
   }
 
   const terminal = formatTerminal(results, stack);
-  const jsonBlock = '```json\n' + JSON.stringify(payload, null, 2) + '\n```';
+  if (human) {
+    return terminal;
+  }
+
+  const jsonBlock = JSON.stringify(payload, null, 2);
   return terminal + '\n' + jsonBlock;
 }
 

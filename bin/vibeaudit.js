@@ -12,6 +12,7 @@ program
   .name('vibeaudit')
   .version(version)
   .option('--json', 'output JSON only, no terminal formatting')
+  .option('--human', 'output terminal only, no JSON block')
   .option('--path <dir>', 'target directory to check (default: cwd)')
   .option('--checks <list>', 'comma-separated list of checks to run (e.g. eslint,tests)')
   .parse(process.argv);
@@ -31,7 +32,7 @@ async function main() {
   }
 
   const stack = [...new Set(detected.map(d => d.stack))].filter(s => s !== 'unknown').join('+') || 'unknown';
-  const output = format(allResults, { json: opts.json, stack });
+  const output = format(allResults, { json: opts.json, human: opts.human, stack });
 
   process.stdout.write(output + '\n');
 
