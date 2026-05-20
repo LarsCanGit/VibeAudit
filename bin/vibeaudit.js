@@ -31,8 +31,17 @@ async function main() {
     allResults.push(...results);
   }
 
+  const warnings = [];
+  if (allResults.length === 0) {
+    if (checksFilter) {
+      warnings.push(`no checks matched filter: ${checksFilter.join(',')}`);
+    } else {
+      warnings.push(`no supported stack detected at: ${targetPath}`);
+    }
+  }
+
   const stack = [...new Set(detected.map(d => d.stack))].filter(s => s !== 'unknown').join('+') || 'unknown';
-  const output = format(allResults, { json: opts.json, human: opts.human, stack });
+  const output = format(allResults, { json: opts.json, human: opts.human, stack, warnings });
 
   process.stdout.write(output + '\n');
 

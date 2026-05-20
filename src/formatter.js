@@ -17,7 +17,7 @@ const STATUS_COLORS = {
   skipped: chalk.gray
 };
 
-function formatTerminal(results, stack) {
+function formatTerminal(results, stack, warnings) {
   const lines = [];
   lines.push(chalk.bold(`\nVibeAudit v${version} — stack: ${stack}\n`));
 
@@ -45,6 +45,13 @@ function formatTerminal(results, stack) {
     }
   }
 
+  if (warnings && warnings.length > 0) {
+    lines.push('');
+    for (const w of warnings) {
+      lines.push(`  ${chalk.yellow('⚠')} ${chalk.yellow('warning:')} ${w}`);
+    }
+  }
+
   const hasBlockingFail = results.some(r => r.blocking && r.status === 'fail');
   const overall = hasBlockingFail ? chalk.red.bold('FAIL') : chalk.green.bold('PASS');
   lines.push(`\n  Result: ${overall}\n`);
@@ -52,26 +59,30 @@ function formatTerminal(results, stack) {
   return lines.join('\n');
 }
 
-function buildJsonPayload(results, stack) {
+function buildJsonPayload(results, stack, warnings) {
   const hasBlockingFail = results.some(r => r.blocking && r.status === 'fail');
-  return {
+  const payload = {
     vibeaudit: version,
     stack,
     result: hasBlockingFail ? 'fail' : 'pass',
     blocking: hasBlockingFail,
     checks: results
   };
+  if (warnings && warnings.length > 0) {
+    payload.warnings = warnings;
+  }
+  return payload;
 }
 
 function format(results, options) {
-  const { json = false, human = false, stack = 'unknown' } = options || {};
-  const payload = buildJsonPayload(results, stack);
+  const { json = false, human = false, stack = 'unknown', warnings = [] } = options || {};
+  const payload = buildJsonPayload(results, stack, warnings);
 
   if (json) {
     return JSON.stringify(payload, null, 2);
   }
 
-  const terminal = formatTerminal(results, stack);
+  const terminal = formatTerminal(results, stack, warnings);
   if (human) {
     return terminal;
   }
