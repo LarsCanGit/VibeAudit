@@ -8,8 +8,10 @@ const SKIP_DIRS = new Set(['.git', 'node_modules', '.gradle', '__pycache__', '.v
 function detectAt(dirPath) {
   const results = [];
 
-  if (fs.existsSync(path.join(dirPath, 'build.gradle')) ||
-      fs.existsSync(path.join(dirPath, 'build.gradle.kts'))) {
+  if ((fs.existsSync(path.join(dirPath, 'build.gradle')) ||
+       fs.existsSync(path.join(dirPath, 'build.gradle.kts'))) &&
+      (fs.existsSync(path.join(dirPath, 'gradlew')) ||
+       fs.existsSync(path.join(dirPath, 'gradlew.bat')))) {
     results.push({ stack: 'android', path: dirPath });
   }
 
