@@ -101,6 +101,8 @@ describe('format() — check rendering', () => {
     const output = format(results, { human: true, stack: 'node' });
     expect(output).toContain('tests');
     expect(output).toContain('skipped');
+    // skipped path omits duration_ms entirely
+    expect(output).not.toContain('0ms');
   });
 
   test('renders issues with file, line, rule, and message', () => {
@@ -163,7 +165,7 @@ describe('format() — check rendering', () => {
       { name: 'custom', status: 'unknown-status', blocking: false, duration_ms: 10, issues: [] }
     ];
     const output = format(results, { human: true, stack: 'node' });
-    expect(output).toContain('?');
-    expect(output).toContain('custom');
+    // ? icon should appear immediately before the check name
+    expect(output).toMatch(/\? custom/);
   });
 });
