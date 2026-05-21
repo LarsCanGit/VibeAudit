@@ -2,25 +2,28 @@
 
 const nodeRunner = require('./node');
 const androidRunner = require('./android');
+const pythonRunner = require('./python');
 
-function getRunners(stacks) {
-  const runners = [];
+function getRunners(detected) {
+  const pairs = [];
 
-  for (const stack of stacks) {
-    if (stack === 'node') {
-      runners.push(nodeRunner);
-    } else if (stack === 'android') {
-      runners.push(androidRunner);
-    } else if (stack !== 'unknown') {
-      process.stderr.write(`vibeaudit: no runner available for stack '${stack}', skipping\n`);
+  for (const entry of detected) {
+    if (entry.stack === 'node') {
+      pairs.push({ runner: nodeRunner, path: entry.path });
+    } else if (entry.stack === 'android') {
+      pairs.push({ runner: androidRunner, path: entry.path });
+    } else if (entry.stack === 'python') {
+      pairs.push({ runner: pythonRunner, path: entry.path });
+    } else if (entry.stack !== 'unknown') {
+      process.stderr.write(`vibeaudit: no runner available for stack '${entry.stack}', skipping\n`);
     }
   }
 
-  if (runners.length === 0) {
+  if (pairs.length === 0) {
     process.stderr.write('vibeaudit: no supported stack detected, no checks will run\n');
   }
 
-  return runners;
+  return pairs;
 }
 
 module.exports = { getRunners };
