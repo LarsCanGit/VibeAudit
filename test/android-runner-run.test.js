@@ -90,6 +90,8 @@ describe('run() — no gradle wrapper', () => {
     // If getGradleCommand found gradlew, run() proceeds past the early-return;
     // compile returns a non-android check name.
     expect(results[0].name).toBe('compile');
+    expect(spawnSync).toHaveBeenCalledWith('./gradlew', expect.any(Array), expect.any(Object));
+    expect(results[0].status).not.toBe('fail');
   });
 });
 
@@ -202,6 +204,7 @@ describe('runLint', () => {
     const [result] = await run(FAKE_PROJECT, ['lint']);
     expect(result.name).toBe('lint');
     expect(result.status).toBe('warn');
+    expect(result.blocking).toBe(true);
     expect(result.issues[0].rule).toBe('lint-report-missing');
   });
 
@@ -211,6 +214,7 @@ describe('runLint', () => {
     const [result] = await run(FAKE_PROJECT, ['lint']);
     expect(result.name).toBe('lint');
     expect(result.status).toBe('pass');
+    expect(result.blocking).toBe(true);
     expect(result.issues).toHaveLength(0);
   });
 
@@ -220,9 +224,11 @@ describe('runLint', () => {
     const [result] = await run(FAKE_PROJECT, ['lint']);
     expect(result.name).toBe('lint');
     expect(result.status).toBe('fail');
+    expect(result.blocking).toBe(true);
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0].rule).toBe('NullPointerException');
     expect(result.issues[0].line).toBe(10);
+    expect(result.issues[0].message).toContain('Null check required');
   });
 });
 
