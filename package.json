@@ -15,6 +15,7 @@
   "bin": {
     "vibeaudit": "./bin/vibeaudit.js"
   },
+  "files": ["bin/", "src/", "action/index.js", "action.yml"],
   "scripts": {
     "lint": "eslint src bin",
     "vibeaudit": "node bin/vibeaudit.js",

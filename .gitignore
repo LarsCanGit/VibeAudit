@@ -51,3 +51,8 @@ npm-publish-prep.md
 # Temp / scratch
 scratch/
 tmp/
+
+# Local tooling and AI session files
+.claude/
+.gstack/
+docs/superpowers/
