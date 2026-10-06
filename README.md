@@ -51,11 +51,19 @@ vibeaudit --human
 
 | Stack | Checks |
 |-------|--------|
-| Node / JS / TS | ESLint (blocking), npm audit (non-blocking), test runner (blocking) |
+| Node / JS / TS | ESLint (blocking), npm audit (non-blocking), test runner (blocking when a real test script exists; non-blocking when there is none) |
 | Android / Kotlin | Compile (blocking), lint (blocking), tests (blocking), ktlint (non-blocking) |
 | Python | Syntax — AST-based (blocking), imports — pyflakes or AST fallback (blocking), requirements.txt coverage (non-blocking), pytest (blocking) |
 
-Auto-detects project type from `package.json`, `build.gradle`, `build.gradle.kts`, or `.py` files. Scans one level of subdirectories for monorepo sub-projects. No config needed for the happy path.
+Auto-detects project type from sentinel files:
+
+- **Node:** `package.json`
+- **Android:** `build.gradle` or `build.gradle.kts`, plus `gradlew` or `gradlew.bat`
+- **Python:** `pyproject.toml`, `setup.py`, or `requirements.txt`; loose `.py` files also count, but only when no other stack is detected in that directory
+
+Scans one level of subdirectories for monorepo sub-projects. No config needed for the happy path.
+
+If no checks run (unsupported project, or `--checks` matches nothing), the JSON output includes a `warnings` field so the run is never a silent pass.
 
 ## Exit codes
 
@@ -63,7 +71,6 @@ Auto-detects project type from `package.json`, `build.gradle`, `build.gradle.kts
 |------|---------|
 | 0 | All blocking checks pass |
 | 1 | One or more blocking checks failed |
-| 2 | VibeAudit configuration error |
 
 ## GitHub Action
 
@@ -80,12 +87,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: npm install -g @lmhansen/vibeaudit
       - uses: LarsCanGit/VibeAudit@main
 ```
 
 Fails the workflow if any blocking check fails. Exit code 1 = blocking failure.
 
-> **Note:** Android/Kotlin projects require the Android SDK and Gradle in CI. This is not provided by the default `ubuntu-latest` runner. The Action is primarily useful for Node/JS projects in v0.1. Android CI support is on the roadmap.
+> **Note:** Android/Kotlin projects require the Android SDK and Gradle in CI. This is not provided by the default `ubuntu-latest` runner. The Action is primarily useful for Node/JS and Python projects for now. Android CI support is on the roadmap.
 
 ## Why VibeAudit
 
